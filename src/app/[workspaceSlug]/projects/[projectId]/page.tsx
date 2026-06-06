@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import IssueList from '@/components/issue-list'
 
 export default async function ProjectPage({ 
   params 
@@ -52,12 +53,7 @@ export default async function ProjectPage({
         )}
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-sm">Project details coming soon.</p>
-          <p className="text-gray-400 text-xs mt-2">This will include issues, cycles, modules, and more.</p>
-        </div>
-      </div>
+      <IssueList projectId={projectId} workspaceId={project.workspace_id} />
     </div>
   )
 }
