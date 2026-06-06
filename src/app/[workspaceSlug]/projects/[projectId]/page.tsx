@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import IssueList from '@/components/issue-list'
 import CycleList from '@/components/cycle-list'
 import ModuleList from '@/components/module-list'
+import PageList from '@/components/page-list'
 
 export default async function ProjectPage({ 
   params 
@@ -59,6 +60,7 @@ export default async function ProjectPage({
         <IssueList projectId={projectId} workspaceId={project.workspace_id} />
         <CycleList projectId={projectId} workspaceId={project.workspace_id} />
         <ModuleList projectId={projectId} workspaceId={project.workspace_id} />
+        <PageList workspaceId={project.workspace_id} projectId={projectId} />
       </div>
     </div>
   )
