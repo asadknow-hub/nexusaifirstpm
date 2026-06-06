@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS issue_states (
   name TEXT NOT NULL,
   description TEXT,
   color TEXT DEFAULT '#64748b',
-  group TEXT NOT NULL CHECK (group IN ('backlog', 'unstarted', 'started', 'completed', 'cancelled', 'triage')),
+  "group" TEXT NOT NULL CHECK ("group" IN ('backlog', 'unstarted', 'started', 'completed', 'cancelled', 'triage')),
   sequence FLOAT DEFAULT 65535,
   default BOOLEAN DEFAULT FALSE,
   is_triage BOOLEAN DEFAULT FALSE,
@@ -68,4 +68,4 @@ CREATE POLICY "Project members can delete issue states"
 -- Indexes
 CREATE INDEX IF NOT EXISTS issue_states_project_id_idx ON issue_states(project_id);
 CREATE INDEX IF NOT EXISTS issue_states_workspace_id_idx ON issue_states(workspace_id);
-CREATE INDEX IF NOT EXISTS issue_states_group_idx ON issue_states(group);
+CREATE INDEX IF NOT EXISTS issue_states_group_idx ON issue_states("group");
