@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# scripts with secrets
+scripts/
+
 # vercel
 .vercel
 
