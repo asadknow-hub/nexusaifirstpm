@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS issue_states (
   color TEXT DEFAULT '#64748b',
   "group" TEXT NOT NULL CHECK ("group" IN ('backlog', 'unstarted', 'started', 'completed', 'cancelled', 'triage')),
   sequence FLOAT DEFAULT 65535,
-  default BOOLEAN DEFAULT FALSE,
+  "default" BOOLEAN DEFAULT FALSE,
   is_triage BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
