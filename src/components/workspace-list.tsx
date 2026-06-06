@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus } from 'lucide-react'
+import { Plus, ExternalLink } from 'lucide-react'
 
 interface Workspace {
   id: string
   name: string
   slug: string
   background_color: string
+  logo_url?: string
   created_at: string
 }
 
@@ -63,21 +64,38 @@ export default function WorkspaceList() {
   }
 
   if (loading) {
-    return <div className="text-gray-500">Loading workspaces...</div>
+    return (
+      <div className="space-y-4 py-8">
+        <div className="h-6 w-1/4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-24 w-full bg-gray-100 rounded-lg animate-pulse" />
+        <div className="h-24 w-full bg-gray-100 rounded-lg animate-pulse" />
+      </div>
+    )
   }
 
   return (
-    <div>
-      {!showCreateForm ? (
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="mb-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4" />
-          Create Workspace
-        </button>
-      ) : (
-        <form onSubmit={createWorkspace} className="mb-4 p-4 bg-white rounded-lg shadow border">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2 pt-6">
+        <div className="flex flex-col items-start gap-x-2">
+          <div className="flex items-center gap-2 text-base font-medium">
+            All workspaces <span className="text-gray-400">• {workspaces.length}</span>
+          </div>
+          <div className="text-xs leading-5 text-gray-400">
+            Manage your workspaces and collaborate with your team.
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Create workspace
+          </button>
+        </div>
+      </div>
+
+      {showCreateForm && (
+        <form onSubmit={createWorkspace} className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -88,7 +106,8 @@ export default function WorkspaceList() {
                 value={newWorkspaceName}
                 onChange={(e) => setNewWorkspaceName(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="My Workspace"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
             <div>
@@ -100,7 +119,8 @@ export default function WorkspaceList() {
                 value={newWorkspaceSlug}
                 onChange={(e) => setNewWorkspaceSlug(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="my-workspace"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
           </div>
@@ -108,14 +128,14 @@ export default function WorkspaceList() {
             <button
               type="submit"
               disabled={creating}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
               {creating ? 'Creating...' : 'Create'}
             </button>
             <button
               type="button"
               onClick={() => setShowCreateForm(false)}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+              className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
             >
               Cancel
             </button>
@@ -124,20 +144,44 @@ export default function WorkspaceList() {
       )}
 
       {workspaces.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <p className="text-gray-500">No workspaces yet. Create your first workspace to get started.</p>
+        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+          <p className="text-gray-500 text-sm">No workspaces yet. Create your first workspace to get started.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex flex-col gap-4 py-2">
           {workspaces.map((workspace) => (
-            <div
+            <a
               key={workspace.id}
-              className="p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
-              style={{ backgroundColor: workspace.background_color }}
+              href={`/${workspace.slug}`}
+              className="group flex items-center justify-between gap-2.5 truncate rounded-lg border border-gray-200 bg-white p-3 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm transition-all"
             >
-              <h3 className="text-lg font-semibold text-white">{workspace.name}</h3>
-              <p className="text-sm text-white/70">{workspace.slug}</p>
-            </div>
+              <div className="flex items-start gap-4">
+                <span
+                  className={`relative mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center p-2 text-xs uppercase ${
+                    !workspace?.logo_url && "rounded-lg bg-blue-600 text-white"
+                  }`}
+                >
+                  {workspace?.logo_url && workspace.logo_url !== "" ? (
+                    <img
+                      src={workspace.logo_url}
+                      className="absolute top-0 left-0 h-full w-full rounded-sm object-cover"
+                      alt="Workspace Logo"
+                    />
+                  ) : (
+                    (workspace?.name?.[0] ?? "...")
+                  )}
+                </span>
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex w-full flex-wrap items-center gap-2.5">
+                    <h3 className="text-sm font-medium capitalize">{workspace.name}</h3>
+                    <span className="text-xs text-gray-400">[{workspace.slug}]</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-shrink-0">
+                <ExternalLink width={14} height={16} className="text-gray-400 group-hover:text-gray-600" />
+              </div>
+            </a>
           ))}
         </div>
       )}
