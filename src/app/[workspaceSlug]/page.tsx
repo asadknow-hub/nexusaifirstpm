@@ -35,7 +35,7 @@ export default async function WorkspacePage({ params }: { params: Promise<{ work
         <h1 className="text-2xl font-bold text-gray-900">{workspace.name}</h1>
         <span className="text-sm text-gray-400">[{workspace.slug}]</span>
       </div>
-      <ProjectList workspaceId={workspace.id} />
+      <ProjectList workspaceId={workspace.id} workspaceSlug={workspace.slug} />
     </div>
   )
 }

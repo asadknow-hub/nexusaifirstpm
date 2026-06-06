@@ -15,9 +15,10 @@ interface Project {
 
 interface ProjectListProps {
   workspaceId: string
+  workspaceSlug: string
 }
 
-export default function ProjectList({ workspaceId }: ProjectListProps) {
+export default function ProjectList({ workspaceId, workspaceSlug }: ProjectListProps) {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -174,7 +175,7 @@ export default function ProjectList({ workspaceId }: ProjectListProps) {
           {projects.map((project) => (
             <a
               key={project.id}
-              href={`/${project.identifier}`}
+              href={`/${workspaceSlug}/projects/${project.id}`}
               className="group flex items-center justify-between gap-2.5 truncate rounded-lg border border-gray-200 bg-white p-3 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm transition-all"
             >
               <div className="flex items-start gap-4">
