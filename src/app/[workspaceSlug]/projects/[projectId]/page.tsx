@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import IssueList from '@/components/issue-list'
+import CycleList from '@/components/cycle-list'
 
 export default async function ProjectPage({ 
   params 
@@ -53,7 +54,10 @@ export default async function ProjectPage({
         )}
       </div>
 
-      <IssueList projectId={projectId} workspaceId={project.workspace_id} />
+      <div className="space-y-8">
+        <IssueList projectId={projectId} workspaceId={project.workspace_id} />
+        <CycleList projectId={projectId} workspaceId={project.workspace_id} />
+      </div>
     </div>
   )
 }
