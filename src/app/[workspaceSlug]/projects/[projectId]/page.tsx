@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { useState } from 'react'
 import IssueList from '@/components/issue-list'
 import CycleList from '@/components/cycle-list'
 import ModuleList from '@/components/module-list'
 import PageList from '@/components/page-list'
+import ExtendedSidebar from '@/components/extended-sidebar'
 
 export default async function ProjectPage({ 
   params 
@@ -37,31 +39,57 @@ export default async function ProjectPage({
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <a href={`/${workspaceSlug}`} className="text-sm text-gray-400 hover:text-gray-600">
-            {project.workspaces.slug}
-          </a>
-          <span className="text-gray-400">/</span>
-          <span className="text-sm text-gray-400">projects</span>
+    <>
+      <ExtendedSidebarClient workspaceSlug={workspaceSlug} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <a href={`/${workspaceSlug}`} className="text-sm text-gray-400 hover:text-gray-600">
+              {project.workspaces.slug}
+            </a>
+            <span className="text-gray-400">/</span>
+            <span className="text-sm text-gray-400">projects</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{project.emoji || '📋'}</span>
+            <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+            <span className="text-sm text-gray-400">[{project.identifier}]</span>
+          </div>
+          {project.description && (
+            <p className="text-gray-600 mt-2">{project.description}</p>
+          )}
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{project.emoji || '📋'}</span>
-          <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-          <span className="text-sm text-gray-400">[{project.identifier}]</span>
-        </div>
-        {project.description && (
-          <p className="text-gray-600 mt-2">{project.description}</p>
-        )}
-      </div>
 
-      <div className="space-y-8">
-        <IssueList projectId={projectId} workspaceId={project.workspace_id} />
-        <CycleList projectId={projectId} workspaceId={project.workspace_id} />
-        <ModuleList projectId={projectId} workspaceId={project.workspace_id} />
-        <PageList workspaceId={project.workspace_id} projectId={projectId} />
+        <div className="space-y-8">
+          <IssueList projectId={projectId} workspaceId={project.workspace_id} />
+          <CycleList projectId={projectId} workspaceId={project.workspace_id} />
+          <ModuleList projectId={projectId} workspaceId={project.workspace_id} />
+          <PageList workspaceId={project.workspace_id} projectId={projectId} />
+        </div>
       </div>
-    </div>
+    </>
+  )
+}
+
+function ExtendedSidebarClient({ workspaceSlug }: { workspaceSlug: string }) {
+  'use client'
+  const [isOpen, setIsOpen] = useState(false)
+  
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed top-4 left-4 z-40 p-2 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <ExtendedSidebar
+        workspaceSlug={workspaceSlug}
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+      />
+    </>
   )
 }
