@@ -6,6 +6,7 @@ import CycleList from '@/components/cycle-list'
 import ModuleList from '@/components/module-list'
 import PageList from '@/components/page-list'
 import ExtendedSidebar from '@/components/extended-sidebar'
+import ProjectSidebar from '@/components/project-sidebar'
 
 export default async function ProjectPage({ 
   params 
@@ -41,7 +42,8 @@ export default async function ProjectPage({
   return (
     <>
       <ExtendedSidebarClient workspaceSlug={workspaceSlug} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ProjectSidebarClient workspaceSlug={workspaceSlug} workspaceId={project.workspace_id} />
+      <div className="ml-64 max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <a href={`/${workspaceSlug}`} className="text-sm text-gray-400 hover:text-gray-600">
@@ -92,4 +94,9 @@ function ExtendedSidebarClient({ workspaceSlug }: { workspaceSlug: string }) {
       />
     </>
   )
+}
+
+function ProjectSidebarClient({ workspaceSlug, workspaceId }: { workspaceSlug: string; workspaceId: string }) {
+  'use client'
+  return <ProjectSidebar workspaceSlug={workspaceSlug} workspaceId={workspaceId} />
 }
