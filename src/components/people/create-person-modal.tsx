@@ -35,23 +35,10 @@ export default function CreatePersonModal() {
     setError('')
 
     try {
-      // First create the auth user
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: formData.email,
-        email_confirm: true,
-        user_metadata: {
-          display_name: formData.display_name
-        }
-      })
-
-      if (authError) {
-        setError(authError.message)
-        return
-      }
-
-      // Then create the profile with HR fields
+      // Create a profile record without creating an auth user
+      // The user will need to sign up separately to link to this profile
       const { error: profileError } = await supabase.from('profiles').insert({
-        user_id: authData.user.id,
+        user_id: null, // Will be set when user signs up
         email: formData.email,
         display_name: formData.display_name,
         job_title: formData.job_title,
@@ -63,7 +50,7 @@ export default function CreatePersonModal() {
         start_date: formData.start_date || null,
         bio: formData.bio,
         skills: formData.skills,
-        is_active: true
+        is_active: false // Inactive until user signs up
       })
 
       if (profileError) {
@@ -117,6 +104,12 @@ export default function CreatePersonModal() {
             {error}
           </div>
         )}
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <p className="text-sm text-blue-800">
+            <strong>Note:</strong> This creates a profile record. The person will need to sign up separately to activate their account.
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
