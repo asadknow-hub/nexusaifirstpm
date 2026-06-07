@@ -35,37 +35,25 @@ export default function CreatePersonModal() {
     setError('')
 
     try {
-      // Try direct insertion with a different approach
+      // Create profile using the RPC function
       const { data, error } = await supabase.rpc('create_profile', {
         p_email: formData.email,
         p_display_name: formData.display_name,
-        p_job_title: formData.job_title,
-        p_department: formData.department,
-        p_phone: formData.phone,
-        p_location: formData.location,
+        p_job_title: formData.job_title || null,
+        p_department: formData.department || null,
+        p_phone: formData.phone || null,
+        p_location: formData.location || null,
         p_timezone: formData.timezone,
         p_employment_type: formData.employment_type,
-        p_start_date: formData.start_date,
-        p_bio: formData.bio,
+        p_start_date: formData.start_date || null,
+        p_bio: formData.bio || null,
         p_skills: formData.skills
       })
 
       if (error) {
-        // If RPC fails, try the API route
-        const response = await fetch('/api/profiles', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        })
-
-        const apiData = await response.json()
-
-        if (!response.ok) {
-          setError(apiData.error || 'Failed to create person')
-          return
-        }
+        console.error('RPC error:', error)
+        setError(error.message)
+        return
       }
 
       setOpen(false)
@@ -86,6 +74,7 @@ export default function CreatePersonModal() {
       // Refresh the page to show the new person
       window.location.reload()
     } catch (err) {
+      console.error('Submit error:', err)
       setError('Failed to create person')
     } finally {
       setLoading(false)
