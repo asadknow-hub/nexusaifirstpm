@@ -36,6 +36,16 @@ interface Epic {
   owner?: {
     display_name: string
   }
+  issues?: Issue[]
+}
+
+interface Issue {
+  id: string
+  name: string
+  sequence_id: number
+  project_id: string
+  state_id: string
+  completed_at: string | null
 }
 
 interface EpicManagerProps {
@@ -77,7 +87,7 @@ export default function EpicManager({ workspaceId }: EpicManagerProps) {
   }, [workspaceId])
 
   async function fetchEpics() {
-    const { data, error } = await supabase
+    const { data: epicsData, error } = await supabase
       .from('epics')
       .select(`
         *,
@@ -89,7 +99,17 @@ export default function EpicManager({ workspaceId }: EpicManagerProps) {
     if (error) {
       console.error('Error fetching epics:', error)
     } else {
-      setEpics(data || [])
+      // Fetch issues for each epic
+      const epicsWithIssues = await Promise.all(
+        (epicsData || []).map(async (epic) => {
+          const { data: issues } = await supabase
+            .from('issues')
+            .select('id, name, sequence_id, project_id, state_id, completed_at')
+            .eq('epic_id', epic.id)
+          return { ...epic, issues: issues || [] }
+        })
+      )
+      setEpics(epicsWithIssues)
     }
     setLoading(false)
   }
@@ -233,6 +253,29 @@ export default function EpicManager({ workspaceId }: EpicManagerProps) {
                 {epic.start_date && <span>Start: {new Date(epic.start_date).toLocaleDateString()}</span>}
                 {epic.start_date && epic.target_date && <span> • </span>}
                 {epic.target_date && <span>Target: {new Date(epic.target_date).toLocaleDateString()}</span>}
+              </div>
+            )}
+            {epic.issues && epic.issues.length > 0 && (
+              <div className="mb-3">
+                <div className="text-xs text-muted-foreground mb-2">
+                  {epic.issues.length} issue{epic.issues.length !== 1 ? 's' : ''}
+                </div>
+                <div className="space-y-1">
+                  {epic.issues.slice(0, 3).map((issue) => (
+                    <div key={issue.id} className="text-xs flex items-center gap-2">
+                      <span className="text-muted-foreground">#{issue.sequence_id}</span>
+                      <span className="truncate">{issue.name}</span>
+                      {issue.completed_at && (
+                        <Badge variant="outline" className="text-xs ml-auto">Done</Badge>
+                      )}
+                    </div>
+                  ))}
+                  {epic.issues.length > 3 && (
+                    <div className="text-xs text-muted-foreground">
+                      +{epic.issues.length - 3} more
+                    </div>
+                  )}
+                </div>
               </div>
             )}
             <div className="flex items-center gap-2">
