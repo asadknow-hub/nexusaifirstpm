@@ -1,12 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { useState } from 'react'
 import IssueList from '@/components/issue-list'
 import CycleList from '@/components/cycle-list'
 import ModuleList from '@/components/module-list'
 import PageList from '@/components/page-list'
-import ExtendedSidebar from '@/components/extended-sidebar'
-import ProjectSidebar from '@/components/project-sidebar'
 
 export default async function ProjectPage({ 
   params 
@@ -41,9 +38,7 @@ export default async function ProjectPage({
 
   return (
     <>
-      <ExtendedSidebarClient workspaceSlug={workspaceSlug} />
-      <ProjectSidebarClient workspaceSlug={workspaceSlug} workspaceId={project.workspace_id} />
-      <div className="ml-64 max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <a href={`/${workspaceSlug}`} className="text-sm text-gray-400 hover:text-gray-600">
@@ -73,30 +68,3 @@ export default async function ProjectPage({
   )
 }
 
-function ExtendedSidebarClient({ workspaceSlug }: { workspaceSlug: string }) {
-  'use client'
-  const [isOpen, setIsOpen] = useState(false)
-  
-  return (
-    <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed top-4 left-4 z-40 p-2 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-      <ExtendedSidebar
-        workspaceSlug={workspaceSlug}
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-      />
-    </>
-  )
-}
-
-function ProjectSidebarClient({ workspaceSlug, workspaceId }: { workspaceSlug: string; workspaceId: string }) {
-  'use client'
-  return <ProjectSidebar workspaceSlug={workspaceSlug} workspaceId={workspaceId} />
-}
