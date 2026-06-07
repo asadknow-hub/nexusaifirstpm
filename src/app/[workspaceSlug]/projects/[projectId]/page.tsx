@@ -5,6 +5,7 @@ import IssueKanban from '@/components/issues/issue-kanban'
 import IssueSpreadsheet from '@/components/issues/issue-spreadsheet'
 import IssueGantt from '@/components/gantt/issue-gantt'
 import IssueCalendar from '@/components/calendar/issue-calendar'
+import CapacityPlanning from '@/components/capacity/capacity-planning'
 import CycleList from '@/components/cycle-list'
 import ModuleList from '@/components/module-list'
 import PageList from '@/components/page-list'
@@ -66,6 +67,7 @@ export default async function ProjectPage({
           <IssueSpreadsheet projectId={projectId} workspaceId={project.workspace_id} />
           <IssueGantt projectId={projectId} workspaceId={project.workspace_id} />
           <IssueCalendar projectId={projectId} />
+          <CapacityPlanning projectId={projectId} workspaceId={project.workspace_id} />
           <IssueList projectId={projectId} workspaceId={project.workspace_id} />
           <CycleList projectId={projectId} workspaceId={project.workspace_id} />
           <ModuleList projectId={projectId} workspaceId={project.workspace_id} />
