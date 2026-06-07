@@ -1,11 +1,16 @@
+'use client'
+
 import Link from 'next/link'
-import { LayoutDashboard, FolderKanban, Target, CalendarDays, BarChart3, Users, Settings, Bell } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Target, CalendarDays, BarChart3, Users, Settings, Bell, Moon, Sun } from 'lucide-react'
+import { useTheme } from '@/components/theme-provider'
 
 interface AdminSidebarProps {
   activePath: string
 }
 
 export function AdminSidebar({ activePath }: AdminSidebarProps) {
+  const { theme, toggleTheme } = useTheme()
+  
   const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/workspaces', label: 'Workspaces', icon: FolderKanban },
@@ -46,6 +51,13 @@ export function AdminSidebar({ activePath }: AdminSidebarProps) {
         </div>
       </nav>
       <div className="border-t border-sidebar-border p-2">
+        <button
+          onClick={toggleTheme}
+          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground w-full"
+        >
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+        </button>
         <Link
           href="/notifications"
           className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
