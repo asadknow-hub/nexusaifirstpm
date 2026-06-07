@@ -35,31 +35,52 @@ export default function CreatePersonModal() {
     setError('')
 
     try {
-      // Create profile directly using the proper RLS policies
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: null,
-          email: formData.email,
-          display_name: formData.display_name,
-          job_title: formData.job_title || null,
-          department: formData.department || null,
-          phone: formData.phone || null,
-          location: formData.location || null,
-          timezone: formData.timezone,
-          employment_type: formData.employment_type,
-          start_date: formData.start_date || null,
-          bio: formData.bio || null,
-          skills: formData.skills || [],
-          is_active: false
-        })
-        .select()
-        .single()
+      // First try the database function approach (most reliable)
+      const { data: functionData, error: functionError } = await supabase.rpc('create_user_profile', {
+        p_email: formData.email,
+        p_display_name: formData.display_name,
+        p_job_title: formData.job_title || null,
+        p_department: formData.department || null,
+        p_phone: formData.phone || null,
+        p_location: formData.location || null,
+        p_timezone: formData.timezone,
+        p_employment_type: formData.employment_type,
+        p_start_date: formData.start_date || null,
+        p_bio: formData.bio || null,
+        p_skills: formData.skills || []
+      })
 
-      if (error) {
-        console.error('Profile creation error:', error)
-        setError(error.message)
-        return
+      if (functionError) {
+        console.error('Function error:', functionError)
+        
+        // If function fails, try direct insertion with RLS
+        const { data, error } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: null,
+            email: formData.email,
+            display_name: formData.display_name,
+            job_title: formData.job_title || null,
+            department: formData.department || null,
+            phone: formData.phone || null,
+            location: formData.location || null,
+            timezone: formData.timezone,
+            employment_type: formData.employment_type,
+            start_date: formData.start_date || null,
+            bio: formData.bio || null,
+            skills: formData.skills || [],
+            is_active: false
+          })
+          .select()
+          .single()
+
+        if (error) {
+          console.error('Direct insertion error:', error)
+          setError(`Failed to create person: ${error.message}`)
+          return
+        }
+      } else {
+        console.log('Profile created via function:', functionData)
       }
 
       setOpen(false)
@@ -81,7 +102,7 @@ export default function CreatePersonModal() {
       window.location.reload()
     } catch (err) {
       console.error('Submit error:', err)
-      setError('Failed to create person')
+      setError('Failed to create person. Please try again.')
     } finally {
       setLoading(false)
     }
