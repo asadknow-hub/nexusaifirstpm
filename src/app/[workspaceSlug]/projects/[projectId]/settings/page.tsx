@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import StateManager from '@/components/states/state-manager'
+import LabelManager from '@/components/labels/label-manager'
 
 export default async function ProjectSettingsPage({ 
   params 
@@ -119,7 +121,12 @@ export default async function ProjectSettingsPage({
         </div>
       </div>
 
-      <div className="mt-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+      <div className="mt-8 space-y-8">
+        <StateManager projectId={projectId} workspaceId={project.workspace_id} />
+        <LabelManager projectId={projectId} workspaceId={project.workspace_id} />
+      </div>
+
+      <div className="mt-8 bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Danger Zone</h2>
           <p className="text-sm text-gray-500 mt-1">Irreversible and destructive actions.</p>

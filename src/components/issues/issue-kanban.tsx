@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import CreateIssueModal from './create-issue-modal'
+import IssueDetailSheet from './issue-detail-sheet'
 
 interface Issue {
   id: string
@@ -90,6 +91,9 @@ function DraggableIssue({ issue }: { issue: Issue }) {
       {...attributes}
       {...listeners}
       className="p-3 rounded-lg border bg-card hover:border-border/80 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing"
+      onClick={(e) => {
+        e.stopPropagation()
+      }}
     >
       <div className="flex items-center gap-2 mb-2">
         <GripVertical className="h-4 w-4 text-muted-foreground" />
@@ -139,6 +143,7 @@ export default function IssueKanban({ projectId, workspaceId }: IssueKanbanProps
   const [activeIssue, setActiveIssue] = useState<Issue | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createStateId, setCreateStateId] = useState<string | null>(null)
+  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null)
   const supabase = createClient()
 
   const sensors = useSensors(
@@ -322,6 +327,13 @@ export default function IssueKanban({ projectId, workspaceId }: IssueKanbanProps
           fetchIssues()
           setCreateStateId(null)
         }}
+      />
+      <IssueDetailSheet
+        open={!!selectedIssueId}
+        onOpenChange={(open) => !open && setSelectedIssueId(null)}
+        issueId={selectedIssueId}
+        projectId={projectId}
+        workspaceId={workspaceId}
       />
     </div>
   )

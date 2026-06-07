@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import CreateIssueModal from './create-issue-modal'
+import IssueDetailSheet from './issue-detail-sheet'
 
 interface Issue {
   id: string
@@ -55,6 +56,7 @@ export default function IssueList({ projectId, workspaceId }: IssueListProps) {
   const [issues, setIssues] = useState<Issue[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -121,6 +123,7 @@ export default function IssueList({ projectId, workspaceId }: IssueListProps) {
             <div
               key={issue.id}
               className="group flex items-center gap-4 p-4 rounded-lg border bg-card hover:border-border/80 hover:shadow-sm transition-all cursor-pointer"
+              onClick={() => setSelectedIssueId(issue.id)}
             >
               <div className="flex-shrink-0">
                 <Flag className={`h-4 w-4 ${priorityConfig[issue.priority as keyof typeof priorityConfig]?.color.split(' ')[0] || 'text-muted-foreground'}`} />
@@ -198,6 +201,13 @@ export default function IssueList({ projectId, workspaceId }: IssueListProps) {
         projectId={projectId}
         workspaceId={workspaceId}
         onSuccess={fetchIssues}
+      />
+      <IssueDetailSheet
+        open={!!selectedIssueId}
+        onOpenChange={(open) => !open && setSelectedIssueId(null)}
+        issueId={selectedIssueId}
+        projectId={projectId}
+        workspaceId={workspaceId}
       />
     </div>
   )
