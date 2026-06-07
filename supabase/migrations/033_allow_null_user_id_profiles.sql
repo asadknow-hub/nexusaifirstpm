@@ -10,6 +10,27 @@ DROP INDEX IF EXISTS profiles_user_id_idx;
 -- Add a new unique constraint that allows null user_id but ensures unique email
 ALTER TABLE profiles ADD CONSTRAINT profiles_email_unique UNIQUE (email);
 
+-- Drop existing RLS policies
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+
+-- Create new RLS policies
+CREATE POLICY "Users can view all profiles" 
+  ON profiles FOR SELECT 
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Users can insert profiles" 
+  ON profiles FOR INSERT 
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Users can update own profile" 
+  ON profiles FOR UPDATE 
+  USING (auth.uid() = user_id OR user_id IS NULL);
+
+CREATE POLICY "Admins can delete profiles" 
+  ON profiles FOR DELETE 
+  USING (auth.role() = 'authenticated');
+
 -- Update the trigger to handle null user_id
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
