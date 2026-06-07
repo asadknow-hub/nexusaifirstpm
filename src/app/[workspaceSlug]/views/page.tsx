@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import ViewsManager from '@/components/views/views-manager'
 
 export default async function WorkspaceViewsPage({ 
   params 
@@ -122,6 +123,10 @@ export default async function WorkspaceViewsPage({
             </a>
           </div>
         )}
+      </div>
+
+      <div className="mt-8">
+        <ViewsManager workspaceId={workspace.id} />
       </div>
     </div>
   )

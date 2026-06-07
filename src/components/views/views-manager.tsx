@@ -36,7 +36,7 @@ interface View {
 }
 
 interface ViewsManagerProps {
-  projectId: string
+  projectId?: string
   workspaceId: string
 }
 
@@ -55,17 +55,22 @@ export default function ViewsManager({ projectId, workspaceId }: ViewsManagerPro
 
   useEffect(() => {
     fetchViews()
-  }, [projectId])
+  }, [projectId, workspaceId])
 
   async function fetchViews() {
-    const { data, error } = await supabase
+    let query = supabase
       .from('project_views')
       .select(`
         *,
         created_by:profiles (display_name)
       `)
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: false })
+      .eq('workspace_id', workspaceId)
+
+    if (projectId) {
+      query = query.eq('project_id', projectId)
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching views:', error)
