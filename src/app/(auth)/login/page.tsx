@@ -3,11 +3,15 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Loader2, Mail, ArrowRight } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [magicLinkSent, setMagicLinkSent] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
   const supabase = createClient()
@@ -17,10 +21,7 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setError(error.message)
@@ -32,92 +33,122 @@ export default function LoginPage() {
     router.refresh()
   }
 
-  const handleMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleMagicLink = async () => {
+    if (!email) { setError('Enter your email first'); return }
     setLoading(true)
     setError('')
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
 
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
-
-    setError('Check your email for the magic link!')
+    if (error) { setError(error.message); setLoading(false); return }
+    setMagicLinkSent(true)
     setLoading(false)
   }
 
   return (
-    <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
-      
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
-          {error}
+    <div className="min-h-screen flex">
+      {/* Left panel — branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-primary items-center justify-center p-12">
+        <div className="max-w-md text-primary-foreground">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="h-10 w-10 rounded-lg bg-primary-foreground/20 flex items-center justify-center text-lg font-bold">N</div>
+            <span className="text-2xl font-bold">NexusAI PM</span>
+          </div>
+          <h2 className="text-4xl font-bold leading-tight mb-4">
+            Next-gen project management for enterprise teams
+          </h2>
+          <p className="text-primary-foreground/70 text-lg">
+            Gantt charts, Kanban boards, Epics, Org charts, and AI-powered insights — all in one place.
+          </p>
         </div>
-      )}
-
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-        >
-          {loading ? 'Loading...' : 'Login'}
-        </button>
-      </form>
-
-      <div className="mt-4">
-        <button
-          onClick={handleMagicLink}
-          disabled={loading}
-          className="w-full py-2 px-4 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
-        >
-          {loading ? 'Loading...' : 'Send Magic Link'}
-        </button>
       </div>
 
-      <p className="mt-4 text-center text-sm text-gray-600">
-        Don't have an account?{' '}
-        <a href="/signup" className="text-blue-600 hover:underline">
-          Sign up
-        </a>
-      </p>
+      {/* Right panel — form */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-background">
+        <div className="w-full max-w-[400px] space-y-6">
+          <div className="lg:hidden flex items-center gap-2 mb-2">
+            <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">N</div>
+            <span className="text-xl font-bold">NexusAI PM</span>
+          </div>
+
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Welcome back</h1>
+            <p className="text-muted-foreground mt-1">Sign in to your account to continue</p>
+          </div>
+
+          {error && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          {magicLinkSent ? (
+            <div className="rounded-lg border border-border bg-muted/50 p-6 text-center space-y-3">
+              <Mail className="h-10 w-10 mx-auto text-primary" />
+              <h3 className="font-semibold text-foreground">Check your email</h3>
+              <p className="text-sm text-muted-foreground">
+                We sent a magic link to <strong>{email}</strong>
+              </p>
+              <Button variant="ghost" size="sm" onClick={() => setMagicLinkSent(false)}>
+                Use a different method
+              </Button>
+            </div>
+          ) : (
+            <>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium text-foreground">Email</label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="you@company.com"
+                    className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="password" className="text-sm font-medium text-foreground">Password</label>
+                  <input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="Enter your password"
+                    className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+                  />
+                </div>
+
+                <Button type="submit" disabled={loading} className="w-full h-10">
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Sign in <ArrowRight className="h-4 w-4" /></>}
+                </Button>
+              </form>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">or</span></div>
+              </div>
+
+              <Button variant="outline" onClick={handleMagicLink} disabled={loading} className="w-full h-10">
+                <Mail className="h-4 w-4" /> Sign in with Magic Link
+              </Button>
+            </>
+          )}
+
+          <p className="text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{' '}
+            <Link href="/signup" className="font-medium text-primary hover:underline">
+              Create one
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
