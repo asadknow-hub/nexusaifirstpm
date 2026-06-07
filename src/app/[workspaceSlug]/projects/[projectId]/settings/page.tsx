@@ -9,6 +9,7 @@ import ModuleManager from '@/components/modules/module-manager'
 import CycleManager from '@/components/cycles/cycle-manager'
 import ViewsManager from '@/components/views/views-manager'
 import IssueExportImport from '@/components/issues/issue-export-import'
+import CustomFieldsManager from '@/components/custom-fields/custom-fields-manager'
 import { Button } from '@/components/ui/button'
 
 export default function ProjectSettingsPage({ 
@@ -157,6 +158,7 @@ export default function ProjectSettingsPage({
         <ModuleManager projectId={projectId} workspaceId={project.workspace_id} />
         <CycleManager projectId={projectId} workspaceId={project.workspace_id} />
         <ViewsManager projectId={projectId} workspaceId={project.workspace_id} />
+        <CustomFieldsManager projectId={projectId} workspaceId={project.workspace_id} />
       </div>
 
       <div className="mt-8 bg-white rounded-lg border border-gray-200 shadow-sm">
