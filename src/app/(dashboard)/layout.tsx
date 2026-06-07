@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { Settings, LogOut } from 'lucide-react'
 
 export default async function DashboardLayout({
   children,
@@ -14,21 +16,33 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">NexusAIFirst</h1>
+    <div className="min-h-screen bg-background">
+      <nav className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex justify-between h-14">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">N</div>
+              <span className="text-lg font-bold text-foreground">NexusAI PM</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">{user.email}</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                  {user.email?.charAt(0).toUpperCase()}
+                </div>
+                <span className="hidden sm:inline">{user.email}</span>
+              </div>
+              <Link
+                href="/profile/settings"
+                className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+              </Link>
               <form action="/auth/logout" method="post">
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
+                  className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted transition-colors"
                 >
-                  Logout
+                  <LogOut className="h-4 w-4" />
                 </button>
               </form>
             </div>

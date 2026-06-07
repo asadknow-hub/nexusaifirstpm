@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, ExternalLink } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Plus, ArrowRight, Loader2, Layers, X } from 'lucide-react'
 
 interface Workspace {
   id: string
   name: string
   slug: string
-  background_color: string
   logo_url?: string
   created_at: string
 }
@@ -20,167 +21,155 @@ export default function WorkspaceList() {
   const [newWorkspaceName, setNewWorkspaceName] = useState('')
   const [newWorkspaceSlug, setNewWorkspaceSlug] = useState('')
   const [creating, setCreating] = useState(false)
+  const [error, setError] = useState('')
   const supabase = createClient()
+  const router = useRouter()
 
   useEffect(() => {
     fetchWorkspaces()
   }, [])
 
   async function fetchWorkspaces() {
-    const { data, error } = await supabase
-      .from('workspaces')
-      .select('*')
-    
-    if (error) {
-      console.error('Error fetching workspaces:', error)
-    } else {
-      setWorkspaces(data || [])
-    }
+    const { data, error } = await supabase.from('workspaces').select('*').order('created_at', { ascending: true })
+    if (!error) setWorkspaces(data || [])
     setLoading(false)
+  }
+
+  function handleNameChange(name: string) {
+    setNewWorkspaceName(name)
+    setNewWorkspaceSlug(name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
   }
 
   async function createWorkspace(e: React.FormEvent) {
     e.preventDefault()
     setCreating(true)
+    setError('')
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('workspaces')
-      .insert({
-        name: newWorkspaceName,
-        slug: newWorkspaceSlug,
-      })
+      .insert({ name: newWorkspaceName, slug: newWorkspaceSlug })
+      .select()
+      .single()
 
     if (error) {
-      console.error('Error creating workspace:', error)
-      alert('Failed to create workspace')
-    } else {
-      setNewWorkspaceName('')
-      setNewWorkspaceSlug('')
-      setShowCreateForm(false)
-      fetchWorkspaces()
+      setError(error.message.includes('duplicate') ? 'A workspace with this URL already exists' : error.message)
+      setCreating(false)
+      return
     }
 
-    setCreating(false)
+    router.push(`/${data.slug}`)
   }
 
   if (loading) {
     return (
-      <div className="space-y-4 py-8">
-        <div className="h-6 w-1/4 bg-gray-200 rounded animate-pulse" />
-        <div className="h-24 w-full bg-gray-100 rounded-lg animate-pulse" />
-        <div className="h-24 w-full bg-gray-100 rounded-lg animate-pulse" />
+      <div className="max-w-2xl mx-auto py-16 px-6">
+        <div className="space-y-4">
+          <div className="h-8 w-48 bg-muted rounded-lg animate-pulse" />
+          <div className="h-4 w-72 bg-muted rounded animate-pulse" />
+          <div className="h-20 w-full bg-muted rounded-xl animate-pulse mt-8" />
+          <div className="h-20 w-full bg-muted rounded-xl animate-pulse" />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2 pt-6">
-        <div className="flex flex-col items-start gap-x-2">
-          <div className="flex items-center gap-2 text-base font-medium">
-            All workspaces <span className="text-gray-400">• {workspaces.length}</span>
-          </div>
-          <div className="text-xs leading-5 text-gray-400">
-            Manage your workspaces and collaborate with your team.
-          </div>
+    <div className="max-w-2xl mx-auto py-12 px-6">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Your Workspaces</h2>
+          <p className="text-sm text-muted-foreground mt-1">Select a workspace or create a new one</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowCreateForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Create workspace
-          </button>
-        </div>
+        <Button onClick={() => setShowCreateForm(true)} className="gap-2">
+          <Plus className="h-4 w-4" /> New Workspace
+        </Button>
       </div>
 
       {showCreateForm && (
-        <form onSubmit={createWorkspace} className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name
-              </label>
+        <div className="mb-6 rounded-xl border border-border bg-card p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-foreground">Create Workspace</h3>
+            <button onClick={() => setShowCreateForm(false)} className="text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {error && (
+            <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={createWorkspace} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Workspace Name</label>
               <input
                 type="text"
                 value={newWorkspaceName}
-                onChange={(e) => setNewWorkspaceName(e.target.value)}
+                onChange={(e) => handleNameChange(e.target.value)}
                 required
-                placeholder="My Workspace"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                placeholder="Acme Corporation"
+                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Slug
-              </label>
-              <input
-                type="text"
-                value={newWorkspaceSlug}
-                onChange={(e) => setNewWorkspaceSlug(e.target.value)}
-                required
-                placeholder="my-workspace"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Workspace URL</label>
+              <div className="flex items-center rounded-lg border border-input overflow-hidden">
+                <span className="px-3 py-2 bg-muted text-sm text-muted-foreground border-r border-input">
+                  nexusaipm.vercel.app/
+                </span>
+                <input
+                  type="text"
+                  value={newWorkspaceSlug}
+                  onChange={(e) => setNewWorkspaceSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  required
+                  placeholder="acme"
+                  className="flex-1 h-10 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none"
+                />
+              </div>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={creating}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              {creating ? 'Creating...' : 'Create'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowCreateForm(false)}
-              className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" disabled={creating} className="gap-2">
+                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                {creating ? 'Creating...' : 'Create Workspace'}
+              </Button>
+              <Button type="button" variant="ghost" onClick={() => setShowCreateForm(false)}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </div>
       )}
 
-      {workspaces.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <p className="text-gray-500 text-sm">No workspaces yet. Create your first workspace to get started.</p>
+      {workspaces.length === 0 && !showCreateForm ? (
+        <div className="rounded-xl border border-dashed border-border bg-card p-16 text-center">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+            <Layers className="h-8 w-8 text-primary" />
+          </div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">Welcome to NexusAI PM</h3>
+          <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto">
+            Create your first workspace to start managing projects, tracking issues, and collaborating with your team.
+          </p>
+          <Button onClick={() => setShowCreateForm(true)} size="lg" className="gap-2">
+            <Plus className="h-4 w-4" /> Create your first workspace
+          </Button>
         </div>
       ) : (
-        <div className="flex flex-col gap-4 py-2">
+        <div className="space-y-3">
           {workspaces.map((workspace) => (
             <a
               key={workspace.id}
               href={`/${workspace.slug}`}
-              className="group flex items-center justify-between gap-2.5 truncate rounded-lg border border-gray-200 bg-white p-3 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm transition-all"
+              className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 hover:shadow-md hover:border-primary/20 transition-all duration-200"
             >
-              <div className="flex items-start gap-4">
-                <span
-                  className={`relative mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center p-2 text-xs uppercase ${
-                    !workspace?.logo_url && "rounded-lg bg-blue-600 text-white"
-                  }`}
-                >
-                  {workspace?.logo_url && workspace.logo_url !== "" ? (
-                    <img
-                      src={workspace.logo_url}
-                      className="absolute top-0 left-0 h-full w-full rounded-sm object-cover"
-                      alt="Workspace Logo"
-                    />
-                  ) : (
-                    (workspace?.name?.[0] ?? "...")
-                  )}
-                </span>
-                <div className="flex flex-col items-start gap-1">
-                  <div className="flex w-full flex-wrap items-center gap-2.5">
-                    <h3 className="text-sm font-medium capitalize">{workspace.name}</h3>
-                    <span className="text-xs text-gray-400">[{workspace.slug}]</span>
-                  </div>
-                </div>
+              <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center text-primary-foreground text-lg font-bold shrink-0">
+                {workspace.name?.charAt(0)?.toUpperCase() || 'W'}
               </div>
-              <div className="flex-shrink-0">
-                <ExternalLink width={14} height={16} className="text-gray-400 group-hover:text-gray-600" />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{workspace.name}</h3>
+                <p className="text-xs text-muted-foreground font-mono">/{workspace.slug}</p>
               </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </a>
           ))}
         </div>
