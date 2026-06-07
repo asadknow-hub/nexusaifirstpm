@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, ArrowRight, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AdminSidebar } from '@/components/admin-sidebar'
 
 export default async function WorkspacesPage() {
   const supabase = await createClient()
@@ -17,35 +18,7 @@ export default async function WorkspacesPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
-      <aside className="w-[240px] flex-shrink-0 flex flex-col border-r border-border bg-sidebar">
-        <div className="flex h-14 items-center gap-3 px-4 border-b border-sidebar-border">
-          <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">N</div>
-          <span className="text-sm font-semibold text-sidebar-foreground">NexusAI PM</span>
-        </div>
-        <nav className="flex-1 overflow-y-auto px-2 py-3">
-          <div className="space-y-1">
-            <Link href="/" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/workspaces" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium bg-sidebar-accent text-sidebar-accent-foreground">
-              Workspaces
-            </Link>
-            <Link href="/projects" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-              Projects
-            </Link>
-            <Link href="/epics" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-              Epics
-            </Link>
-            <Link href="/cycles" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-              Cycles
-            </Link>
-            <Link href="/people" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-              People
-            </Link>
-          </div>
-        </nav>
-      </aside>
+      <AdminSidebar activePath="/workspaces" />
 
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">

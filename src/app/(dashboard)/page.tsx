@@ -1,11 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import {
-  LayoutDashboard, FolderKanban, Target, CalendarDays, Layers3,
-  BarChart3, Users, Plus, ArrowRight, Layers, Settings, Bell
-} from 'lucide-react'
+import { FolderKanban, Plus, ArrowRight, Layers, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AdminSidebar } from '@/components/admin-sidebar'
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
@@ -25,71 +23,14 @@ export default async function AdminDashboardPage() {
   ])
 
   const stats = [
-    { label: 'Workspaces', value: workspaces?.length || 0, icon: Layers, href: '/admin/workspaces' },
-    { label: 'Projects', value: projects?.length || 0, icon: FolderKanban, href: '/admin/projects' },
-    { label: 'Users', value: userCount || 0, icon: Users, href: '/admin/users' },
+    { label: 'Workspaces', value: workspaces?.length || 0, icon: Layers, href: '/workspaces' },
+    { label: 'Projects', value: projects?.length || 0, icon: FolderKanban, href: '/projects' },
+    { label: 'Users', value: userCount || 0, icon: Users, href: '/people' },
   ]
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Admin Sidebar */}
-      <aside className="w-[240px] flex-shrink-0 flex flex-col border-r border-border bg-sidebar">
-        {/* Header */}
-        <div className="flex h-14 items-center gap-3 px-4 border-b border-sidebar-border">
-          <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">N</div>
-          <span className="text-sm font-semibold text-sidebar-foreground">NexusAI PM</span>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-2 py-3">
-          <div className="space-y-1">
-            <Link href="/" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium bg-sidebar-accent text-sidebar-accent-foreground">
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboard
-            </Link>
-            <Link href="/workspaces" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-              <Layers className="h-4 w-4" />
-              Workspaces
-            </Link>
-            <Link href="/projects" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-              <FolderKanban className="h-4 w-4" />
-              Projects
-            </Link>
-            <Link href="/epics" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-              <Target className="h-4 w-4" />
-              Epics
-            </Link>
-            <Link href="/cycles" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-              <CalendarDays className="h-4 w-4" />
-              Cycles
-            </Link>
-            <Link href="/people" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-              <Users className="h-4 w-4" />
-              People
-            </Link>
-            <Link href="/analytics" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-              <BarChart3 className="h-4 w-4" />
-              Analytics
-            </Link>
-          </div>
-        </nav>
-
-        {/* Bottom */}
-        <div className="border-t border-sidebar-border p-2">
-          <div className="flex items-center gap-2">
-            <Link href="/notifications" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground">
-              <Bell className="h-4 w-4" />
-              <span>Notifications</span>
-            </Link>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/settings" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground">
-              <Settings className="h-4 w-4" />
-              <span>Settings</span>
-            </Link>
-          </div>
-        </div>
-      </aside>
+      <AdminSidebar activePath="/" />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
