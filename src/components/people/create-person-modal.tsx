@@ -35,11 +35,36 @@ export default function CreatePersonModal() {
     setError('')
 
     try {
-      // Use the proper RLS approach - direct insertion with correct policies
-      const { data, error } = await supabase
+      // Step 1: Create Supabase auth user first
+      const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
+      
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: tempPassword,
+        options: {
+          data: {
+            display_name: formData.display_name,
+            is_temporary_password: true
+          }
+        }
+      })
+
+      if (authError) {
+        console.error('Auth user creation error:', authError)
+        setError(`Failed to create user: ${authError.message}`)
+        return
+      }
+
+      if (!authData.user) {
+        setError('Failed to create user account')
+        return
+      }
+
+      // Step 2: Create profile linked to the auth user
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .insert({
-          user_id: null,
+          user_id: authData.user.id,
           email: formData.email,
           display_name: formData.display_name,
           job_title: formData.job_title || null,
@@ -51,18 +76,18 @@ export default function CreatePersonModal() {
           start_date: formData.start_date || null,
           bio: formData.bio || null,
           skills: formData.skills || [],
-          is_active: false
+          is_active: false // Inactive until they set their own password
         })
         .select()
         .single()
 
-      if (error) {
-        console.error('RLS insert error:', error)
-        setError(`Failed to create person: ${error.message}`)
+      if (profileError) {
+        console.error('Profile creation error:', profileError)
+        setError(`Failed to create profile: ${profileError.message}`)
         return
       }
 
-      console.log('Profile created with proper RLS:', data)
+      console.log('User and profile created successfully:', { authData, profileData })
 
       setOpen(false)
       setFormData({
@@ -78,6 +103,9 @@ export default function CreatePersonModal() {
         bio: '',
         skills: []
       })
+      
+      // Show success message with temp password info
+      alert(`Person created successfully!\n\nTemporary password: ${tempPassword}\n\nThey should log in and change their password.`)
       
       // Refresh the page to show the new person
       window.location.reload()
