@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import StateManager from '@/components/states/state-manager'
 import LabelManager from '@/components/labels/label-manager'
 import ModuleManager from '@/components/modules/module-manager'
+import CycleManager from '@/components/cycles/cycle-manager'
 
 export default async function ProjectSettingsPage({ 
   params 
@@ -126,6 +127,7 @@ export default async function ProjectSettingsPage({
         <StateManager projectId={projectId} workspaceId={project.workspace_id} />
         <LabelManager projectId={projectId} workspaceId={project.workspace_id} />
         <ModuleManager projectId={projectId} workspaceId={project.workspace_id} />
+        <CycleManager projectId={projectId} workspaceId={project.workspace_id} />
       </div>
 
       <div className="mt-8 bg-white rounded-lg border border-gray-200 shadow-sm">
