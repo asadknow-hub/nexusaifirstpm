@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import EpicManager from '@/components/epics/epic-manager'
+import EpicTimeline from '@/components/epics/epic-timeline'
 
 export default async function EpicsPage({ params }: { params: Promise<{ workspaceSlug: string }> }) {
   const { workspaceSlug } = await params
@@ -28,7 +29,8 @@ export default async function EpicsPage({ params }: { params: Promise<{ workspac
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-6 space-y-8">
+        <EpicTimeline workspaceId={workspace.id} />
         <EpicManager workspaceId={workspace.id} />
       </div>
     </div>
