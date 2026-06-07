@@ -35,26 +35,19 @@ export default function CreatePersonModal() {
     setError('')
 
     try {
-      // Create a profile record without creating an auth user
-      // The user will need to sign up separately to link to this profile
-      const { error: profileError } = await supabase.from('profiles').insert({
-        user_id: null, // Will be set when user signs up
-        email: formData.email,
-        display_name: formData.display_name,
-        job_title: formData.job_title,
-        department: formData.department,
-        phone: formData.phone,
-        location: formData.location,
-        timezone: formData.timezone,
-        employment_type: formData.employment_type,
-        start_date: formData.start_date || null,
-        bio: formData.bio,
-        skills: formData.skills,
-        is_active: false // Inactive until user signs up
+      // Use API route to create profile (bypasses RLS)
+      const response = await fetch('/api/profiles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       })
 
-      if (profileError) {
-        setError(profileError.message)
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to create person')
         return
       }
 
