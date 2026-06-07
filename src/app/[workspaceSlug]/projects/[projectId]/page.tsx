@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import IssueList from '@/components/issues/issue-list'
 import IssueKanban from '@/components/issues/issue-kanban'
 import IssueSpreadsheet from '@/components/issues/issue-spreadsheet'
+import IssueGantt from '@/components/gantt/issue-gantt'
+import IssueCalendar from '@/components/calendar/issue-calendar'
 import CycleList from '@/components/cycle-list'
 import ModuleList from '@/components/module-list'
 import PageList from '@/components/page-list'
@@ -62,6 +64,8 @@ export default async function ProjectPage({
         <div className="space-y-8">
           <IssueKanban projectId={projectId} workspaceId={project.workspace_id} />
           <IssueSpreadsheet projectId={projectId} workspaceId={project.workspace_id} />
+          <IssueGantt projectId={projectId} workspaceId={project.workspace_id} />
+          <IssueCalendar projectId={projectId} />
           <IssueList projectId={projectId} workspaceId={project.workspace_id} />
           <CycleList projectId={projectId} workspaceId={project.workspace_id} />
           <ModuleList projectId={projectId} workspaceId={project.workspace_id} />

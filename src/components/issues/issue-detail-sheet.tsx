@@ -17,6 +17,8 @@ import { Separator } from '@/components/ui/separator'
 import IssueComments from '@/components/comments/issue-comments'
 import IssueActivities from '@/components/activities/issue-activities'
 import SubIssues from '@/components/issues/sub-issues'
+import DependencyManager from '@/components/dependencies/dependency-manager'
+import TimeTracker from '@/components/time/time-tracker'
 
 interface Issue {
   id: string
@@ -193,6 +195,15 @@ export default function IssueDetailSheet({
 
           <Separator />
 
+          {/* Dependencies */}
+          <DependencyManager
+            issueId={issue.id}
+            projectId={projectId}
+            workspaceId={workspaceId}
+          />
+
+          <Separator />
+
           {/* Sub-issues */}
           <SubIssues
             parentIssueId={issue.id}
@@ -302,6 +313,15 @@ export default function IssueDetailSheet({
 
           {/* Comments */}
           <IssueComments
+            issueId={issue.id}
+            projectId={projectId}
+            workspaceId={workspaceId}
+          />
+
+          <Separator />
+
+          {/* Time Tracking */}
+          <TimeTracker
             issueId={issue.id}
             projectId={projectId}
             workspaceId={workspaceId}
