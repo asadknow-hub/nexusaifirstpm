@@ -27,7 +27,8 @@ export default function CreatePersonModal() {
     employment_type: 'full_time',
     start_date: '',
     bio: '',
-    skills: []
+    skills: [],
+    password: ''
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,23 +37,35 @@ export default function CreatePersonModal() {
     setError('')
 
     try {
-      // Step 1: Create Supabase auth user first
-      const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
+      // Validate password
+      const password = formData.password || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
       
+      if (!formData.password) {
+        setError('Please provide a password for the new user')
+        return
+      }
+
+      // Step 1: Create Supabase auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
-        password: tempPassword,
+        password: password,
         options: {
           data: {
             display_name: formData.display_name,
-            is_temporary_password: true
+            is_temporary_password: !formData.password
           }
         }
       })
 
       if (authError) {
         console.error('Auth user creation error:', authError)
-        setError(`Failed to create user: ${authError.message}`)
+        
+        // Handle rate limit specifically
+        if (authError.message.includes('rate limit')) {
+          setError('Email rate limit exceeded. Please wait a few minutes and try again.')
+        } else {
+          setError(`Failed to create user: ${authError.message}`)
+        }
         return
       }
 
@@ -82,7 +95,7 @@ export default function CreatePersonModal() {
           start_date: formData.start_date || null,
           bio: formData.bio || null,
           skills: formData.skills || [],
-          is_active: autoConfirm // Active if auto-confirmed, otherwise false
+          is_active: true // Active since we provided a password
         })
         .select()
         .single()
@@ -108,15 +121,12 @@ export default function CreatePersonModal() {
         employment_type: 'full_time',
         start_date: '',
         bio: '',
-        skills: []
+        skills: [],
+        password: ''
       })
       
-      // Show success message with temp password info
-      if (autoConfirm) {
-        alert(`Person created successfully!\n\nEmail: ${formData.email}\nTemporary password: ${tempPassword}\n\nThey can log in immediately.`)
-      } else {
-        alert(`Person created successfully!\n\nEmail: ${formData.email}\nTemporary password: ${tempPassword}\n\nThey need to confirm their email first, then they can log in.`)
-      }
+      // Show success message
+      alert(`Person created successfully!\n\nEmail: ${formData.email}\nPassword: ${password}\n\nThey can log in immediately.`)
       
       // Refresh the page to show the new person
       window.location.reload()
@@ -187,6 +197,23 @@ export default function CreatePersonModal() {
                 onChange={(e) => handleInputChange('display_name', e.target.value)}
                 disabled={loading}
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium mb-2">
+                Password *
+              </label>
+              <Input
+                type="password"
+                required
+                placeholder="Enter a secure password"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                disabled={loading}
+              />
+              <p className="text-xs text-gray-500 mt-1">This will be the user's initial password</p>
             </div>
           </div>
 
