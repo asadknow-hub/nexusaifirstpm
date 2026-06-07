@@ -18,7 +18,7 @@ interface Issue {
 }
 
 interface ProjectAnalyticsProps {
-  projectId: string
+  projectId?: string
   workspaceId: string
 }
 
@@ -31,10 +31,10 @@ export default function ProjectAnalytics({ projectId, workspaceId }: ProjectAnal
 
   useEffect(() => {
     fetchIssues()
-  }, [projectId])
+  }, [projectId, workspaceId])
 
   async function fetchIssues() {
-    const { data, error } = await supabase
+    let query = supabase
       .from('issues')
       .select(`
         id,
@@ -44,8 +44,13 @@ export default function ProjectAnalytics({ projectId, workspaceId }: ProjectAnal
         state_id,
         issue_states (name, group)
       `)
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
+      .eq('workspace_id', workspaceId)
+
+    if (projectId) {
+      query = query.eq('project_id', projectId)
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: true })
 
     if (error) {
       console.error('Error fetching issues:', error)

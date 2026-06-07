@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import ProjectAnalytics from '@/components/analytics/project-analytics'
 
 export default async function AnalyticsPage({ 
   params 
@@ -135,19 +136,7 @@ export default async function AnalyticsPage({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Modules Overview</h2>
-          <div className="flex items-center justify-center h-40">
-            <p className="text-gray-500">{moduleCount || 0} modules in workspace</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
-          <div className="flex items-center justify-center h-40">
-            <p className="text-gray-500">Activity tracking coming soon</p>
-          </div>
-        </div>
+        <ProjectAnalytics workspaceId={workspace.id} />
       </div>
     </div>
   )
