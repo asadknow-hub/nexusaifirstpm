@@ -35,20 +35,37 @@ export default function CreatePersonModal() {
     setError('')
 
     try {
-      // Use API route to create profile (bypasses RLS)
-      const response = await fetch('/api/profiles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      // Try direct insertion with a different approach
+      const { data, error } = await supabase.rpc('create_profile', {
+        p_email: formData.email,
+        p_display_name: formData.display_name,
+        p_job_title: formData.job_title,
+        p_department: formData.department,
+        p_phone: formData.phone,
+        p_location: formData.location,
+        p_timezone: formData.timezone,
+        p_employment_type: formData.employment_type,
+        p_start_date: formData.start_date,
+        p_bio: formData.bio,
+        p_skills: formData.skills
       })
 
-      const data = await response.json()
+      if (error) {
+        // If RPC fails, try the API route
+        const response = await fetch('/api/profiles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        })
 
-      if (!response.ok) {
-        setError(data.error || 'Failed to create person')
-        return
+        const apiData = await response.json()
+
+        if (!response.ok) {
+          setError(apiData.error || 'Failed to create person')
+          return
+        }
       }
 
       setOpen(false)
