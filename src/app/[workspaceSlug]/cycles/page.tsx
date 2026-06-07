@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import CycleManager from '@/components/cycles/cycle-manager'
 
 export default async function ActiveCyclesPage({ 
   params 
@@ -116,6 +117,10 @@ export default async function ActiveCyclesPage({
           </a>
         </div>
       )}
+
+      <div className="mt-8">
+        <CycleManager workspaceId={workspace.id} />
+      </div>
     </div>
   )
 }

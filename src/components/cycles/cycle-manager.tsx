@@ -31,7 +31,7 @@ interface Cycle {
 }
 
 interface CycleManagerProps {
-  projectId: string
+  projectId?: string
   workspaceId: string
 }
 
@@ -51,17 +51,22 @@ export default function CycleManager({ projectId, workspaceId }: CycleManagerPro
 
   useEffect(() => {
     fetchCycles()
-  }, [projectId])
+  }, [projectId, workspaceId])
 
   async function fetchCycles() {
-    const { data, error } = await supabase
+    let query = supabase
       .from('cycles')
       .select(`
         *,
         owned_by:profiles (display_name)
       `)
-      .eq('project_id', projectId)
-      .order('sort_order', { ascending: true })
+      .eq('workspace_id', workspaceId)
+
+    if (projectId) {
+      query = query.eq('project_id', projectId)
+    }
+
+    const { data, error } = await query.order('sort_order', { ascending: true })
 
     if (error) {
       console.error('Error fetching cycles:', error)
