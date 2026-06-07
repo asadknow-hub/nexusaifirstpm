@@ -35,23 +35,29 @@ export default function CreatePersonModal() {
     setError('')
 
     try {
-      // Create profile using the RPC function
-      const { data, error } = await supabase.rpc('create_profile', {
-        p_email: formData.email,
-        p_display_name: formData.display_name,
-        p_job_title: formData.job_title || null,
-        p_department: formData.department || null,
-        p_phone: formData.phone || null,
-        p_location: formData.location || null,
-        p_timezone: formData.timezone,
-        p_employment_type: formData.employment_type,
-        p_start_date: formData.start_date || null,
-        p_bio: formData.bio || null,
-        p_skills: formData.skills
-      })
+      // Create profile directly using the proper RLS policies
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: null,
+          email: formData.email,
+          display_name: formData.display_name,
+          job_title: formData.job_title || null,
+          department: formData.department || null,
+          phone: formData.phone || null,
+          location: formData.location || null,
+          timezone: formData.timezone,
+          employment_type: formData.employment_type,
+          start_date: formData.start_date || null,
+          bio: formData.bio || null,
+          skills: formData.skills || [],
+          is_active: false
+        })
+        .select()
+        .single()
 
       if (error) {
-        console.error('RPC error:', error)
+        console.error('Profile creation error:', error)
         setError(error.message)
         return
       }
