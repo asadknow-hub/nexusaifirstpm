@@ -18,7 +18,7 @@ export default async function WorkspacesPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <AdminSidebar activePath="/workspaces" />
+      <AdminSidebar activePath="/workspaces" workspaceId={undefined} />
 
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">

@@ -30,7 +30,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <AdminSidebar activePath="/" />
+      <AdminSidebar activePath="/" workspaceId={undefined} />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">

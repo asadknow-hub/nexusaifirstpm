@@ -25,7 +25,7 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <AdminSidebar activePath="/analytics" />
+      <AdminSidebar activePath="/analytics" workspaceId={undefined} />
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b border-border bg-background/80 backdrop-blur-sm flex items-center justify-between px-6">
           <h1 className="text-lg font-semibold text-foreground">System Analytics</h1>

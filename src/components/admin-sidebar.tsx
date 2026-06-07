@@ -1,15 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { LayoutDashboard, FolderKanban, Target, CalendarDays, BarChart3, Users, Settings, Bell, Moon, Sun } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Target, CalendarDays, BarChart3, Users, Settings, Bell, Moon, Sun, Search } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
+import { useState } from 'react'
+import GlobalSearch from '@/components/search/global-search'
 
 interface AdminSidebarProps {
   activePath: string
+  workspaceId?: string
 }
 
-export function AdminSidebar({ activePath }: AdminSidebarProps) {
+export function AdminSidebar({ activePath, workspaceId }: AdminSidebarProps) {
   const { theme, toggleTheme } = useTheme()
+  const [searchOpen, setSearchOpen] = useState(false)
   
   const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -52,6 +56,13 @@ export function AdminSidebar({ activePath }: AdminSidebarProps) {
       </nav>
       <div className="border-t border-sidebar-border p-2">
         <button
+          onClick={() => setSearchOpen(true)}
+          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground w-full"
+        >
+          <Search className="h-4 w-4" />
+          <span>Search</span>
+        </button>
+        <button
           onClick={toggleTheme}
           className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground w-full"
         >
@@ -81,6 +92,8 @@ export function AdminSidebar({ activePath }: AdminSidebarProps) {
           <span>Settings</span>
         </Link>
       </div>
+
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} workspaceId={workspaceId || ''} />
     </aside>
   )
 }
