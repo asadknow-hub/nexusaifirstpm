@@ -151,6 +151,100 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
     setDaysToShow(Math.max(7, Math.min(90, daysToShow + change)))
   }
 
+  // Calculate critical path issues
+  function getCriticalPathIssues(): Set<string> {
+    const criticalPath = new Set<string>()
+    const issueMap = new Map(issues.map(i => [i.id, i]))
+    
+    // Build adjacency list for dependencies
+    const graph = new Map<string, string[]>()
+    const reverseGraph = new Map<string, string[]>()
+    
+    dependencies.forEach(dep => {
+      if (!graph.has(dep.depends_on_id)) graph.set(dep.depends_on_id, [])
+      if (!reverseGraph.has(dep.issue_id)) reverseGraph.set(dep.issue_id, [])
+      graph.get(dep.depends_on_id)!.push(dep.issue_id)
+      reverseGraph.get(dep.issue_id)!.push(dep.depends_on_id)
+    })
+    
+    // Calculate latest finish time for each issue (backward pass)
+    const latestFinish = new Map<string, number>()
+    
+    // Start with issues that have no dependents (end of chain)
+    const endIssues = issues.filter(i => !graph.has(i.id) || graph.get(i.id)!.length === 0)
+    
+    endIssues.forEach(issue => {
+      const targetDate = issue.target_date ? new Date(issue.target_date) : new Date()
+      latestFinish.set(issue.id, targetDate.getTime())
+    })
+    
+    // Propagate backwards through dependencies
+    const visited = new Set<string>()
+    function propagateBackward(issueId: string): number {
+      if (visited.has(issueId)) return latestFinish.get(issueId) || 0
+      visited.add(issueId)
+      
+      const dependents = graph.get(issueId) || []
+      if (dependents.length === 0) {
+        const issue = issueMap.get(issueId)
+        const targetDate = issue?.target_date ? new Date(issue.target_date) : new Date()
+        latestFinish.set(issueId, targetDate.getTime())
+        return targetDate.getTime()
+      }
+      
+      const minDependentFinish = Math.min(...dependents.map(d => propagateBackward(d)))
+      latestFinish.set(issueId, minDependentFinish)
+      return minDependentFinish
+    }
+    
+    issues.forEach(issue => propagateBackward(issue.id))
+    
+    // Calculate earliest start time for each issue (forward pass)
+    const earliestStart = new Map<string, number>()
+    
+    const startIssues = issues.filter(i => !reverseGraph.has(i.id) || reverseGraph.get(i.id)!.length === 0)
+    
+    startIssues.forEach(issue => {
+      const startDate = issue.start_date ? new Date(issue.start_date) : new Date()
+      earliestStart.set(issue.id, startDate.getTime())
+    })
+    
+    function propagateForward(issueId: string): number {
+      if (earliestStart.has(issueId)) return earliestStart.get(issueId)!
+      
+      const dependenciesOfIssue = reverseGraph.get(issueId) || []
+      if (dependenciesOfIssue.length === 0) {
+        const issue = issueMap.get(issueId)
+        const startDate = issue?.start_date ? new Date(issue.start_date) : new Date()
+        earliestStart.set(issueId, startDate.getTime())
+        return startDate.getTime()
+      }
+      
+      const maxDependencyStart = Math.max(...dependenciesOfIssue.map(d => propagateForward(d)))
+      earliestStart.set(issueId, maxDependencyStart)
+      return maxDependencyStart
+    }
+    
+    issues.forEach(issue => propagateForward(issue.id))
+    
+    // Identify critical path (where earliest start == latest finish - duration)
+    issues.forEach(issue => {
+      const start = earliestStart.get(issue.id) || 0
+      const finish = latestFinish.get(issue.id) || 0
+      const duration = finish - start
+      
+      // If slack is zero (or very small), it's on critical path
+      const slack = finish - start - duration
+      if (Math.abs(slack) < 86400000) { // Less than 1 day slack
+        criticalPath.add(issue.id)
+      }
+    })
+    
+    return criticalPath
+  }
+
+  const criticalPathIssues = getCriticalPathIssues()
+
   function handleResizeStart(e: React.MouseEvent, issueId: string, currentDate: Date) {
     e.stopPropagation()
     setResizingIssue(issueId)
@@ -415,12 +509,17 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
                     {/* Issue Bar */}
                     {position && (
                       <div
-                        className={`absolute top-4 h-8 rounded-md ${priorityConfig[issue.priority as keyof typeof priorityConfig]?.color || 'bg-gray-400'} cursor-move hover:opacity-80 transition-opacity group`}
+                        className={`absolute top-4 h-8 rounded-md cursor-move hover:opacity-80 transition-opacity group ${
+                          criticalPathIssues.has(issue.id) ? 'ring-2 ring-red-500 ring-offset-2' : ''
+                        }`}
                         style={{
                           left: position.left,
                           width: position.width,
+                          backgroundColor: criticalPathIssues.has(issue.id) 
+                            ? '#ef4444' 
+                            : (priorityConfig[issue.priority as keyof typeof priorityConfig]?.color || 'bg-gray-400').replace('bg-', ''),
                         }}
-                        title={`${issue.name}\n${issue.start_date} - ${issue.target_date || 'No end date'}`}
+                        title={`${issue.name}\n${issue.start_date} - ${issue.target_date || 'No end date'}${criticalPathIssues.has(issue.id) ? '\nCritical Path' : ''}`}
                         onMouseDown={(e) => issue.start_date && handleMoveStart(e, issue.id, new Date(issue.start_date))}
                       >
                         <div className="h-full px-2 flex items-center text-xs text-white font-medium truncate">
