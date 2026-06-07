@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { LayoutDashboard, FolderKanban, Target, CalendarDays, BarChart3, Users, Settings, Bell, Moon, Sun, Search } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Target, CalendarDays, BarChart3, Users, Settings, Bell, Moon, Sun, Search, Keyboard } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { useState } from 'react'
 import GlobalSearch from '@/components/search/global-search'
+import KeyboardShortcutsDialog, { useKeyboardShortcuts } from '@/components/keyboard-shortcuts'
 
 interface AdminSidebarProps {
   activePath: string
@@ -14,6 +15,12 @@ interface AdminSidebarProps {
 export function AdminSidebar({ activePath, workspaceId }: AdminSidebarProps) {
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+
+  useKeyboardShortcuts({
+    onOpenSearch: () => setSearchOpen(true),
+    onShowShortcuts: () => setShortcutsOpen(true),
+  })
   
   const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -63,6 +70,13 @@ export function AdminSidebar({ activePath, workspaceId }: AdminSidebarProps) {
           <span>Search</span>
         </button>
         <button
+          onClick={() => setShortcutsOpen(true)}
+          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground w-full"
+        >
+          <Keyboard className="h-4 w-4" />
+          <span>Keyboard Shortcuts</span>
+        </button>
+        <button
           onClick={toggleTheme}
           className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground w-full"
         >
@@ -94,6 +108,7 @@ export function AdminSidebar({ activePath, workspaceId }: AdminSidebarProps) {
       </div>
 
       <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} workspaceId={workspaceId || ''} />
+      <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </aside>
   )
 }
