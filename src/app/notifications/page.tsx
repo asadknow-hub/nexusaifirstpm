@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { AdminSidebar } from '@/components/admin-sidebar'
+import { AdminSidebarSimple } from '@/components/admin-sidebar-simple'
 import NotificationsInbox from '@/components/notifications/notifications-inbox'
 
 export default async function NotificationsPage() {
@@ -11,7 +11,7 @@ export default async function NotificationsPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <AdminSidebar activePath="/notifications" workspaceId={undefined} />
+      <AdminSidebarSimple activePath="/notifications" workspaceId={undefined} />
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b border-border bg-background/80 backdrop-blur-sm flex items-center justify-between px-6">
           <h1 className="text-lg font-semibold text-foreground">Notifications</h1>

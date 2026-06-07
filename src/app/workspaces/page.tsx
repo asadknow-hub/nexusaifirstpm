@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, ArrowRight, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { AdminSidebar } from '@/components/admin-sidebar'
+import { AdminSidebarSimple } from '@/components/admin-sidebar-simple'
 
 export default async function WorkspacesPage() {
   const supabase = await createClient()
@@ -18,7 +18,7 @@ export default async function WorkspacesPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <AdminSidebar activePath="/workspaces" workspaceId={undefined} />
+      <AdminSidebarSimple activePath="/workspaces" workspaceId={undefined} />
 
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">

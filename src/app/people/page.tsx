@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { AdminSidebar } from '@/components/admin-sidebar'
+import { AdminSidebarSimple } from '@/components/admin-sidebar-simple'
 import DepartmentHierarchy from '@/components/people/department-hierarchy'
 
 export default async function PeoplePage() {
@@ -19,7 +19,7 @@ export default async function PeoplePage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <AdminSidebar activePath="/people" workspaceId={undefined} />
+      <AdminSidebarSimple activePath="/people" workspaceId={undefined} />
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b border-border bg-background/80 backdrop-blur-sm flex items-center justify-between px-6">
           <h1 className="text-lg font-semibold text-foreground">All People</h1>
