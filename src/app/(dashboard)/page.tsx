@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import WorkspaceList from '@/components/workspace-list'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -8,15 +7,17 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/login')
 
-  // If user has exactly one workspace, go straight to it
+  // Always redirect to the first workspace if one exists
   const { data: workspaces } = await supabase
     .from('workspaces')
     .select('slug')
-    .limit(2)
+    .order('created_at', { ascending: true })
+    .limit(1)
 
-  if (workspaces && workspaces.length === 1) {
+  if (workspaces && workspaces.length > 0) {
     redirect(`/${workspaces[0].slug}`)
   }
 
-  return <WorkspaceList />
+  // No workspaces — redirect to onboarding/create flow
+  redirect('/onboarding')
 }

@@ -1,102 +1,131 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
 
-export default async function OnboardingPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Loader2, ArrowRight, Layers, Kanban, Users, BarChart3 } from 'lucide-react'
 
-  if (!user) {
-    redirect('/login')
+export default function OnboardingPage() {
+  const [name, setName] = useState('')
+  const [slug, setSlug] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [error, setError] = useState('')
+  const supabase = createClient()
+  const router = useRouter()
+
+  function handleNameChange(value: string) {
+    setName(value)
+    setSlug(value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
   }
 
-  // Check if user has any workspaces
-  const { data: workspaces } = await supabase
-    .from('workspaces')
-    .select('id')
-    .eq('owner_id', user.id)
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setCreating(true)
+    setError('')
 
-  // If user has workspaces, redirect to dashboard
-  if (workspaces && workspaces.length > 0) {
-    redirect('/')
+    const { data, error } = await supabase
+      .from('workspaces')
+      .insert({ name, slug })
+      .select()
+      .single()
+
+    if (error) {
+      setError(error.message.includes('duplicate') ? 'This URL is already taken' : error.message)
+      setCreating(false)
+      return
+    }
+
+    router.push(`/${data.slug}`)
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Nexus PM</h1>
-            <p className="text-gray-600">Let's get you set up with your first workspace</p>
+    <div className="min-h-screen bg-background flex">
+      {/* Left side — branding */}
+      <div className="hidden lg:flex lg:w-[480px] bg-primary p-12 flex-col justify-between">
+        <div>
+          <div className="flex items-center gap-3 mb-16">
+            <div className="h-10 w-10 rounded-lg bg-primary-foreground/20 flex items-center justify-center text-lg font-bold text-primary-foreground">N</div>
+            <span className="text-2xl font-bold text-primary-foreground">NexusAI PM</span>
+          </div>
+          <h2 className="text-3xl font-bold text-primary-foreground leading-tight mb-6">
+            Set up your workspace in seconds
+          </h2>
+          <div className="space-y-4">
+            {[
+              { icon: Kanban, text: 'Kanban boards & Gantt charts' },
+              { icon: Users, text: 'Team management & Org charts' },
+              { icon: BarChart3, text: 'Analytics & Time tracking' },
+              { icon: Layers, text: 'Epics, Cycles & Modules' },
+            ].map((feature) => (
+              <div key={feature.text} className="flex items-center gap-3 text-primary-foreground/80">
+                <feature.icon className="h-5 w-5" />
+                <span>{feature.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="text-sm text-primary-foreground/50">Enterprise-grade project management</p>
+      </div>
+
+      {/* Right side — form */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
+        <div className="w-full max-w-[440px] space-y-8">
+          <div className="lg:hidden flex items-center gap-2 mb-4">
+            <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">N</div>
+            <span className="text-xl font-bold text-foreground">NexusAI PM</span>
           </div>
 
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xl">
-                1
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Create your workspace</h3>
-                <p className="text-sm text-gray-600">A workspace is where you organize your projects and teams.</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold text-xl">
-                2
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Add your first project</h3>
-                <p className="text-sm text-gray-600">Projects help you track and manage your work.</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold text-xl">
-                3
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Invite your team</h3>
-                <p className="text-sm text-gray-600">Collaborate with others by inviting them to your workspace.</p>
-              </div>
-            </div>
-
-            <form action="/api/workspaces" method="POST" className="mt-8 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Workspace Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  placeholder="My Workspace"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Workspace Slug
-                </label>
-                <input
-                  type="text"
-                  name="slug"
-                  required
-                  placeholder="my-workspace"
-                  pattern="[a-z0-9-]+"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">Only lowercase letters, numbers, and hyphens.</p>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full px-4 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Create Workspace
-              </button>
-            </form>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Create your workspace</h1>
+            <p className="text-muted-foreground mt-2">
+              A workspace is your team's home. Everything — projects, issues, people — lives here.
+            </p>
           </div>
+
+          {error && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Workspace Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => handleNameChange(e.target.value)}
+                required
+                placeholder="Acme Corporation"
+                className="flex h-11 w-full rounded-lg border border-input bg-background px-4 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Workspace URL</label>
+              <div className="flex items-center rounded-lg border border-input overflow-hidden focus-within:ring-2 focus-within:ring-ring">
+                <span className="px-4 py-2.5 bg-muted text-sm text-muted-foreground border-r border-input whitespace-nowrap">
+                  nexusaipm.app/
+                </span>
+                <input
+                  type="text"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  required
+                  placeholder="acme"
+                  className="flex-1 h-11 bg-background px-4 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Lowercase letters, numbers, and hyphens only</p>
+            </div>
+
+            <Button type="submit" disabled={creating || !name || !slug} className="w-full h-11 text-sm gap-2">
+              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+              {creating ? 'Creating workspace...' : 'Create & Get Started'}
+            </Button>
+          </form>
         </div>
       </div>
     </div>

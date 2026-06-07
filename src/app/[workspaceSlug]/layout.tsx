@@ -31,8 +31,7 @@ export default async function WorkspaceLayout({
     .from('projects')
     .select('*')
     .eq('workspace_id', workspace.id)
-    .eq('is_archived', false)
-    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
 
   return (
     <AppShell
