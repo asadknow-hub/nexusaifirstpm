@@ -13,6 +13,7 @@ export default function CreatePersonModal() {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [autoConfirm, setAutoConfirm] = useState(true)
   const supabase = createClient()
   
   const [formData, setFormData] = useState({
@@ -60,7 +61,12 @@ export default function CreatePersonModal() {
         return
       }
 
+      console.log('Auth user created:', authData.user)
+
       // Step 2: Create profile linked to the auth user
+      // Use a delay to ensure the auth user is fully created
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -76,14 +82,15 @@ export default function CreatePersonModal() {
           start_date: formData.start_date || null,
           bio: formData.bio || null,
           skills: formData.skills || [],
-          is_active: false // Inactive until they set their own password
+          is_active: autoConfirm // Active if auto-confirmed, otherwise false
         })
         .select()
         .single()
 
       if (profileError) {
         console.error('Profile creation error:', profileError)
-        setError(`Failed to create profile: ${profileError.message}`)
+        // Don't fail completely - the user was created
+        setError(`User created but profile failed: ${profileError.message}. The user can log in and complete their profile.`)
         return
       }
 
@@ -105,7 +112,11 @@ export default function CreatePersonModal() {
       })
       
       // Show success message with temp password info
-      alert(`Person created successfully!\n\nTemporary password: ${tempPassword}\n\nThey should log in and change their password.`)
+      if (autoConfirm) {
+        alert(`Person created successfully!\n\nEmail: ${formData.email}\nTemporary password: ${tempPassword}\n\nThey can log in immediately.`)
+      } else {
+        alert(`Person created successfully!\n\nEmail: ${formData.email}\nTemporary password: ${tempPassword}\n\nThey need to confirm their email first, then they can log in.`)
+      }
       
       // Refresh the page to show the new person
       window.location.reload()
@@ -300,6 +311,20 @@ export default function CreatePersonModal() {
               disabled={loading}
               rows={3}
             />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="autoConfirm"
+              checked={autoConfirm}
+              onChange={(e) => setAutoConfirm(e.target.checked)}
+              disabled={loading}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="autoConfirm" className="text-sm font-medium text-gray-700">
+              Auto-confirm email (user can log in immediately)
+            </label>
           </div>
 
           <div className="flex gap-4 pt-4">
