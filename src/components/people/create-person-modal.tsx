@@ -35,8 +35,8 @@ export default function CreatePersonModal() {
     setError('')
 
     try {
-      // Use the admin API route that bypasses RLS using service role
-      const response = await fetch('/api/profiles/admin-create', {
+      // Use the simple API route that bypasses RLS
+      const response = await fetch('/api/profiles/simple-create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,12 +47,12 @@ export default function CreatePersonModal() {
       const data = await response.json()
 
       if (!response.ok) {
-        console.error('Admin API error:', data.error)
+        console.error('Simple API error:', data.error)
         setError(`Failed to create person: ${data.error}`)
         return
       }
 
-      console.log('Profile created via admin API:', data.data)
+      console.log('Profile created via simple API:', data.data)
 
       setOpen(false)
       setFormData({
