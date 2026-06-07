@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import WebhookManager from '@/components/webhooks/webhook-manager'
 
 export default async function WorkspaceSettingsPage({ 
   params 
@@ -100,6 +101,10 @@ export default async function WorkspaceSettingsPage({
             </button>
           </div>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <WebhookManager workspaceId={workspace.id} />
       </div>
 
       <div className="mt-6 bg-white rounded-lg border border-gray-200 shadow-sm">
