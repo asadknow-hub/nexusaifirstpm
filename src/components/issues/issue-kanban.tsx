@@ -157,6 +157,55 @@ export default function IssueKanban({ projectId, workspaceId }: IssueKanbanProps
   useEffect(() => {
     fetchIssues()
     fetchStates()
+
+    // Set up real-time subscription for issues
+    const issuesChannel = supabase
+      .channel('issues-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'issues',
+          filter: `project_id=eq.${projectId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setIssues((prev) => [...prev, payload.new as Issue])
+          } else if (payload.eventType === 'UPDATE') {
+            setIssues((prev) =>
+              prev.map((issue) =>
+                issue.id === payload.new.id ? { ...issue, ...payload.new } : issue
+              )
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setIssues((prev) => prev.filter((issue) => issue.id !== payload.old.id))
+          }
+        }
+      )
+      .subscribe()
+
+    // Set up real-time subscription for states
+    const statesChannel = supabase
+      .channel('states-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'issue_states',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => {
+          fetchStates() // Refetch states on any change
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(issuesChannel)
+      supabase.removeChannel(statesChannel)
+    }
   }, [projectId])
 
   async function fetchStates() {
