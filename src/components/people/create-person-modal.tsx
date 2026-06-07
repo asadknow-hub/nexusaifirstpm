@@ -35,24 +35,34 @@ export default function CreatePersonModal() {
     setError('')
 
     try {
-      // Use the simple API route that bypasses RLS
-      const response = await fetch('/api/profiles/simple-create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
+      // Use the proper RLS approach - direct insertion with correct policies
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: null,
+          email: formData.email,
+          display_name: formData.display_name,
+          job_title: formData.job_title || null,
+          department: formData.department || null,
+          phone: formData.phone || null,
+          location: formData.location || null,
+          timezone: formData.timezone,
+          employment_type: formData.employment_type,
+          start_date: formData.start_date || null,
+          bio: formData.bio || null,
+          skills: formData.skills || [],
+          is_active: false
+        })
+        .select()
+        .single()
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        console.error('Simple API error:', data.error)
-        setError(`Failed to create person: ${data.error}`)
+      if (error) {
+        console.error('RLS insert error:', error)
+        setError(`Failed to create person: ${error.message}`)
         return
       }
 
-      console.log('Profile created via simple API:', data.data)
+      console.log('Profile created with proper RLS:', data)
 
       setOpen(false)
       setFormData({
