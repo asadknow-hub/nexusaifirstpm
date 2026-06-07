@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { format, addDays, differenceInDays, min, max } from 'date-fns'
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, GripVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
@@ -48,6 +48,9 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
   const [loading, setLoading] = useState(true)
   const [viewStart, setViewStart] = useState(new Date())
   const [daysToShow, setDaysToShow] = useState(30)
+  const [resizingIssue, setResizingIssue] = useState<string | null>(null)
+  const [resizeStartX, setResizeStartX] = useState(0)
+  const [resizeStartDate, setResizeStartDate] = useState<Date | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -144,6 +147,66 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
     const change = direction === 'in' ? -5 : 5
     setDaysToShow(Math.max(7, Math.min(90, daysToShow + change)))
   }
+
+  function handleResizeStart(e: React.MouseEvent, issueId: string, currentDate: Date) {
+    e.stopPropagation()
+    setResizingIssue(issueId)
+    setResizeStartX(e.clientX)
+    setResizeStartDate(currentDate)
+  }
+
+  function handleResizeMove(e: MouseEvent) {
+    if (!resizingIssue || !resizeStartDate) return
+
+    const deltaX = e.clientX - resizeStartX
+    const daysDelta = Math.round(deltaX / 40) // 40px per day
+    const newDate = addDays(resizeStartDate, daysDelta)
+
+    // Update the issue's target date locally during drag
+    setIssues(prev => prev.map(issue => {
+      if (issue.id === resizingIssue) {
+        return {
+          ...issue,
+          target_date: newDate.toISOString(),
+        }
+      }
+      return issue
+    }))
+  }
+
+  function handleResizeEnd() {
+    if (!resizingIssue) return
+
+    const issue = issues.find(i => i.id === resizingIssue)
+    if (issue && issue.target_date) {
+      // Save to database
+      supabase
+        .from('issues')
+        .update({ target_date: issue.target_date })
+        .eq('id', resizingIssue)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error updating issue date:', error)
+            fetchIssues() // Revert on error
+          }
+        })
+    }
+
+    setResizingIssue(null)
+    setResizeStartX(0)
+    setResizeStartDate(null)
+  }
+
+  useEffect(() => {
+    if (resizingIssue) {
+      window.addEventListener('mousemove', handleResizeMove)
+      window.addEventListener('mouseup', handleResizeEnd)
+      return () => {
+        window.removeEventListener('mousemove', handleResizeMove)
+        window.removeEventListener('mouseup', handleResizeEnd)
+      }
+    }
+  }, [resizingIssue, resizeStartX, resizeStartDate, issues])
 
   if (loading) {
     return (
@@ -246,11 +309,50 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
                         style={{ left: days.indexOf(day) * 40 }}
                       />
                     ))}
+
+                    {/* Dependency Lines */}
+                    <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
+                      {dependencies.map((dep) => {
+                        const fromIssue = issues.find(i => i.id === dep.depends_on_id)
+                        const toIssue = issues.find(i => i.id === dep.issue_id)
+                        if (!fromIssue || !toIssue || !fromIssue.start_date || !toIssue.start_date) return null
+
+                        const fromPosition = getIssuePosition(fromIssue)
+                        const toPosition = getIssuePosition(toIssue)
+                        if (!fromPosition || !toPosition) return null
+
+                        const fromX = fromPosition.left + fromPosition.width
+                        const fromY = issues.indexOf(fromIssue) * 64 + 32 // 64px per row, center at 32
+                        const toX = toPosition.left
+                        const toY = issues.indexOf(toIssue) * 64 + 32
+
+                        // Draw curved line
+                        const midX = (fromX + toX) / 2
+                        const path = `M ${fromX} ${fromY} C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`
+
+                        return (
+                          <g key={dep.id}>
+                            <path
+                              d={path}
+                              stroke="#6366f1"
+                              strokeWidth={2}
+                              fill="none"
+                              strokeDasharray={dep.dependency_type === 'finish_to_start' ? '0' : '5,5'}
+                            />
+                            {/* Arrow head */}
+                            <polygon
+                              points={`${toX},${toY} ${toX - 8},${toY - 4} ${toX - 8},${toY + 4}`}
+                              fill="#6366f1"
+                            />
+                          </g>
+                        )
+                      })}
+                    </svg>
                     
                     {/* Issue Bar */}
                     {position && (
                       <div
-                        className={`absolute top-4 h-8 rounded-md ${priorityConfig[issue.priority as keyof typeof priorityConfig]?.color || 'bg-gray-400'} cursor-pointer hover:opacity-80 transition-opacity`}
+                        className={`absolute top-4 h-8 rounded-md ${priorityConfig[issue.priority as keyof typeof priorityConfig]?.color || 'bg-gray-400'} cursor-pointer hover:opacity-80 transition-opacity group`}
                         style={{
                           left: position.left,
                           width: position.width,
@@ -260,6 +362,18 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
                         <div className="h-full px-2 flex items-center text-xs text-white font-medium truncate">
                           {issue.name}
                         </div>
+                        {/* Resize handle */}
+                        {issue.target_date && (() => {
+                          const targetDate = new Date(issue.target_date)
+                          return (
+                            <div
+                              className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize flex items-center justify-center hover:bg-white/20"
+                              onMouseDown={(e) => handleResizeStart(e, issue.id, targetDate)}
+                            >
+                              <GripVertical className="h-3 w-3 text-white/70" />
+                            </div>
+                          )
+                        })()}
                       </div>
                     )}
                   </div>
