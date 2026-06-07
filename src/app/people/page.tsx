@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AdminSidebar } from '@/components/admin-sidebar'
+import DepartmentHierarchy from '@/components/people/department-hierarchy'
 
 export default async function PeoplePage() {
   const supabase = await createClient()
@@ -23,7 +24,9 @@ export default async function PeoplePage() {
         <header className="h-14 border-b border-border bg-background/80 backdrop-blur-sm flex items-center justify-between px-6">
           <h1 className="text-lg font-semibold text-foreground">All People</h1>
         </header>
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+          <DepartmentHierarchy workspaceId="" />
+          
           {profiles && profiles.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {profiles.map((profile: any) => (
