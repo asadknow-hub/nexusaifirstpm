@@ -51,6 +51,9 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
   const [resizingIssue, setResizingIssue] = useState<string | null>(null)
   const [resizeStartX, setResizeStartX] = useState(0)
   const [resizeStartDate, setResizeStartDate] = useState<Date | null>(null)
+  const [movingIssue, setMovingIssue] = useState<string | null>(null)
+  const [moveStartX, setMoveStartX] = useState(0)
+  const [moveStartDate, setMoveStartDate] = useState<Date | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -155,6 +158,13 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
     setResizeStartDate(currentDate)
   }
 
+  function handleMoveStart(e: React.MouseEvent, issueId: string, currentDate: Date) {
+    e.stopPropagation()
+    setMovingIssue(issueId)
+    setMoveStartX(e.clientX)
+    setMoveStartDate(currentDate)
+  }
+
   function handleResizeMove(e: MouseEvent) {
     if (!resizingIssue || !resizeStartDate) return
 
@@ -168,6 +178,25 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
         return {
           ...issue,
           target_date: newDate.toISOString(),
+        }
+      }
+      return issue
+    }))
+  }
+
+  function handleMoveMove(e: MouseEvent) {
+    if (!movingIssue || !moveStartDate) return
+
+    const deltaX = e.clientX - moveStartX
+    const daysDelta = Math.round(deltaX / 40) // 40px per day
+    const newDate = addDays(moveStartDate, daysDelta)
+
+    // Update the issue's start date locally during drag
+    setIssues(prev => prev.map(issue => {
+      if (issue.id === movingIssue) {
+        return {
+          ...issue,
+          start_date: newDate.toISOString(),
         }
       }
       return issue
@@ -197,6 +226,29 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
     setResizeStartDate(null)
   }
 
+  function handleMoveEnd() {
+    if (!movingIssue) return
+
+    const issue = issues.find(i => i.id === movingIssue)
+    if (issue && issue.start_date) {
+      // Save to database
+      supabase
+        .from('issues')
+        .update({ start_date: issue.start_date })
+        .eq('id', movingIssue)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error updating issue date:', error)
+            fetchIssues() // Revert on error
+          }
+        })
+    }
+
+    setMovingIssue(null)
+    setMoveStartX(0)
+    setMoveStartDate(null)
+  }
+
   useEffect(() => {
     if (resizingIssue) {
       window.addEventListener('mousemove', handleResizeMove)
@@ -207,6 +259,17 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
       }
     }
   }, [resizingIssue, resizeStartX, resizeStartDate, issues])
+
+  useEffect(() => {
+    if (movingIssue) {
+      window.addEventListener('mousemove', handleMoveMove)
+      window.addEventListener('mouseup', handleMoveEnd)
+      return () => {
+        window.removeEventListener('mousemove', handleMoveMove)
+        window.removeEventListener('mouseup', handleMoveEnd)
+      }
+    }
+  }, [movingIssue, moveStartX, moveStartDate, issues])
 
   if (loading) {
     return (
@@ -352,12 +415,13 @@ export default function IssueGantt({ projectId, workspaceId }: IssueGanttProps) 
                     {/* Issue Bar */}
                     {position && (
                       <div
-                        className={`absolute top-4 h-8 rounded-md ${priorityConfig[issue.priority as keyof typeof priorityConfig]?.color || 'bg-gray-400'} cursor-pointer hover:opacity-80 transition-opacity group`}
+                        className={`absolute top-4 h-8 rounded-md ${priorityConfig[issue.priority as keyof typeof priorityConfig]?.color || 'bg-gray-400'} cursor-move hover:opacity-80 transition-opacity group`}
                         style={{
                           left: position.left,
                           width: position.width,
                         }}
                         title={`${issue.name}\n${issue.start_date} - ${issue.target_date || 'No end date'}`}
+                        onMouseDown={(e) => issue.start_date && handleMoveStart(e, issue.id, new Date(issue.start_date))}
                       >
                         <div className="h-full px-2 flex items-center text-xs text-white font-medium truncate">
                           {issue.name}
